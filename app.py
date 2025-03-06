@@ -1,68 +1,68 @@
 from flask import Flask, render_template, request
 import requests
 from dotenv import load_dotenv
-import os
 
-
+# Load environment variables from .env file
 load_dotenv()
-API_KEY = os.getenv('TMDB_API_KEY')
-BASE_URL = 'https://api.tmdb.org/3'
 
-
+# Initialize Flask app
 app = Flask(__name__)
 
-
+# Home route to display the search form
 @app.route('/')
 def home():
     return render_template('index.html')
 
-
+# Search route to handle form submission
 @app.route('/search', methods=['POST'])
 def search():
     search_type = request.form['search_type']
     query = request.form['query']
     
-    print(search_type,query)
     if search_type == 'title':
-        url = f"{BASE_URL}/search/movie?api_key={API_KEY}&query={query}"
+        # Search by title using the 's' parameter
+        url = f"http://www.omdbapi.com/?s={query}&apikey=f44f11b"
         response = requests.get(url)
-        movies = response.json().get('results', [])
-    
-    elif search_type == 'cast':
-        person_url = f"{BASE_URL}/search/person?api_key={API_KEY}&query={query}"
-        person_response = requests.get(person_url)
-        persons = person_response.json().get('results', [])
-        if persons:
-            person_id = persons[0]['id'] 
-            credits_url = f"{BASE_URL}/person/{person_id}/movie_credits?api_key={API_KEY}"
-            credits_response = requests.get(credits_url)
-            movies = credits_response.json().get('cast', [])
-        else:
-            movies = []
-    
-    elif search_type == 'genre':
-        genres_url = f"{BASE_URL}/genre/movie/list?api_key={API_KEY}"
-        genres_response = requests.get(genres_url)
-        print(genres_response)
-        genres = genres_response.json().get('genres', [])
-        genre_id = next((genre['id'] for genre in genres if genre['name'].lower() == query.lower()), None)
-        print(genre_id)
-        if genre_id:
-            discover_url = f"{BASE_URL}/discover/movie?api_key={API_KEY}&with_genres={genre_id}"
-            discover_response = requests.get(discover_url)
-            movies = discover_response.json().get('results', [])
-        else:
-            movies = []
+        movies = response.json().get('Search', [])
     
     elif search_type == 'year':
-        discover_url = f"{BASE_URL}/discover/movie?api_key={API_KEY}&primary_release_year={query}"
-        discover_response = requests.get(discover_url)
-        movies = discover_response.json().get('results', [])
+        # Search with a broad term and filter by year
+        url = f"http://www.omdbapi.com/?s=the&apikey=f44f11b"
+        response = requests.get(url)
+        all_movies = response.json().get('Search', [])
+        movies = [movie for movie in all_movies if movie['Year'] == query]
+    
+    elif search_type == 'genre':
+        # Search with genre name, then filter by genre in details
+        url = f"http://www.omdbapi.com/?s={query}&apikey=f44f11b"
+        response = requests.get(url)
+        all_movies = response.json().get('Search', [])
+        movies = []
+        for movie in all_movies:
+            detail_url = f"http://www.omdbapi.com/?i={movie['imdbID']}&apikey=f44f11b"
+            detail_response = requests.get(detail_url)
+            detail = detail_response.json()
+            if 'Genre' in detail and query.lower() in detail['Genre'].lower():
+                movies.append(detail)
+    
+    elif search_type == 'cast':
+        # Search with cast name, then filter by actors in details
+        url = f"http://www.omdbapi.com/?s={query}&apikey=f44f11b"
+        response = requests.get(url)
+        all_movies = response.json().get('Search', [])
+        movies = []
+        for movie in all_movies:
+            detail_url = f"http://www.omdbapi.com/?i={movie['imdbID']}&apikey=f44f11b"
+            detail_response = requests.get(detail_url)
+            detail = detail_response.json()
+            if 'Actors' in detail and query.lower() in detail['Actors'].lower():
+                movies.append(detail)
     
     else:
         movies = []
     
     return render_template('results.html', movies=movies)
 
+# Run the app in debug mode
 if __name__ == '__main__':
-    app.run(debug=True,port = 8080)
+    app.run()
