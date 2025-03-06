@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Lookup</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Movie Lookup</h1>
+    <form action="/search" method="post">
+        <select name="search_type">
+            <option value="genre">Genre</option>
+            <option value="year">Year</option>
+            <option value="title">Title</option>
+            <option value="cast">Cast</option>
+        </select>
+        <input type="text" name="query" placeholder="Enter search query" required>
+        <button type="submit">Search</button>
+        <p>For genre, enter a name like "Action". For year, enter a year like "2010". For title, enter a movie title. For cast, enter an actor's name.</p>
+    </form>
+</body>
+</html>

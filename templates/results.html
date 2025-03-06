@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Search Results</h1>
+    {% if movies %}
+        <ul>
+        {% for movie in movies %}
+            <li>
+                {% if movie['poster_path'] %}
+                    <img src="https://image.tmdb.org/t/p/w500{{ movie['poster_path'] }}" alt="{{ movie['title'] }}" width="100">
+                {% else %}
+                    <p>No poster available</p>
+                {% endif %}
+                {{ movie['title'] }} ({{ movie['release_date'][:4] if movie['release_date'] else 'Unknown' }})
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No movies found.</p>
+    {% endif %}
+    <a href="/">Back to search</a>
+</body>
+</html>
